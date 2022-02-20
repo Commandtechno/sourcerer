@@ -1,95 +1,41 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
-
-	"golang.org/x/net/html"
 )
 
-func fromURL(baseUrl *url.URL, urlCache map[string]struct{}) {
-	if _, cached := urlCache[baseUrl.String()]; cached {
-		fmt.Println("Skipping duplicate url:", baseUrl.String())
-		return
-	} else {
-		urlCache[baseUrl.String()] = struct{}{}
-	}
-
-	fmt.Println("Downloading", baseUrl.String())
-	res, err := http.Get(baseUrl.String())
-	if err != nil {
-		fmt.Println("Error downloading", baseUrl.String(), err)
-		return
-	}
-
-	if res.StatusCode != 200 {
-		fmt.Println("URL responded with", res.Status)
+func fromUrl(ctx Context) {
+	res, ok := fetch(ctx)
+	if !ok {
 		return
 	}
 
 	contentType := res.Header.Get("Content-Type")
-	if strings.HasPrefix(contentType, "text/html") {
-		fmt.Println("Detected HTML file")
-		parsedHtml, err := html.Parse(res.Body)
-		if err != nil {
-			fmt.Println("Error parsing HTML", err)
-			return
-		}
+	if contentType == "" {
+		warn(ctx.Depth, "URL responded with no content type:", contentType)
+		return
+	}
 
-		var walk func(*html.Node)
-		walk = func(node *html.Node) {
-			if node.Type == html.ElementNode {
-				// js source maps
-				if node.Data == "script" {
-					for _, attr := range node.Attr {
-						if attr.Key == "src" && strings.HasSuffix(attr.Val, ".js") {
-							relativeUrl, err := baseUrl.Parse(attr.Val + ".map")
-							if err != nil {
-								fmt.Println("Error parsing relative url", err)
-								return
-							}
+	// clean up text/html; charset=utf-8
+	contentType = strings.SplitN(contentType, ";", 2)[0]
 
-							fromURL(relativeUrl, urlCache)
-						}
-					}
-				}
+	switch contentType {
+	case "text/html":
+		fromHtml(ctx, res)
 
-				// css source maps
-				if node.Data == "link" {
-					for _, attr := range node.Attr {
-						if attr.Key == "href" && strings.HasSuffix(attr.Val, ".css") {
-							relativeUrl, err := baseUrl.Parse(attr.Val + ".map")
-							if err != nil {
-								fmt.Println("Error parsing relative url", err)
-								return
-							}
+	case "text/css":
+		fromCss(ctx, res)
 
-							fromURL(relativeUrl, urlCache)
-						}
-					}
-				}
-			}
+	case "application/javascript":
+		fromJs(ctx, res)
 
-			for child := node.FirstChild; child != nil; child = child.NextSibling {
-				walk(child)
-			}
-		}
+	case "application/octet-stream":
+		fromSourceMap(ctx, res)
 
-		walk(parsedHtml)
-	} else if strings.HasPrefix(contentType, "application/javascript") {
-		// TODO: get source map from js file
-		// fmt.Println("Detected JavaScript file")
-		// body, err := ioutil.ReadAll(res.Body)
-		// if err != nil {
-		// 	fmt.Println("Error reading body", err)
-		// 	return
-		// }
+	case "application/json":
+		fromSourceMap(ctx, res)
 
-		// // get source map url from body
-		// sourceMapUrl := regexp.Match(`//# sourceMappingURL=(.*)`, body)
-	} else {
-		parse(res.Body)
+	default:
+		error(ctx.Depth, "URL responded with unknown content type:", contentType)
 	}
 }
