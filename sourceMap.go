@@ -26,6 +26,11 @@ func fromSourceMap(ctx Context, res *http.Response) {
 	ctx.Depth++
 
 	for index, source := range sourceMap.Sources {
+		queryIndex := strings.Index(source, "?")
+		if queryIndex != -1 {
+			source = source[:queryIndex]
+		}
+
 		// remove reserved characters
 		// https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
 		source = strings.ReplaceAll(source, "<", "")
