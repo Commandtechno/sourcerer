@@ -26,6 +26,12 @@ func fromSourceMap(ctx Context, res *http.Response) {
 	ctx.Depth++
 
 	for index, source := range sourceMap.Sources {
+		// escape parent directory references
+		for strings.HasPrefix(source, "../") {
+			source = strings.TrimPrefix(source, "../")
+		}
+
+		// remove query parameters
 		queryIndex := strings.Index(source, "?")
 		if queryIndex != -1 {
 			source = source[:queryIndex]
