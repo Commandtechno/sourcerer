@@ -44,7 +44,13 @@ func main() {
 				return
 			}
 
-			ctx := Context{Dir: dir, Url: *url, Cache: make(map[string]struct{}), Depth: 0}
+			ctx := Context{
+				Dir:   dir,
+				Url:   *url,
+				Cache: make(map[string]struct{}),
+				Depth: 0,
+			}
+
 			fromUrl(ctx)
 		}
 	}

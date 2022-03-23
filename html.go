@@ -16,74 +16,88 @@ func fromHtml(ctx Context, res *http.Response) {
 		return
 	}
 
+	isScript := false
+	script := ""
+
+	isStyle := false
+	style := ""
+
 	var walk func(*html.Node)
 	walk = func(node *html.Node) {
 		if node.Type == html.ElementNode {
 			// js source maps
 			if node.Data == "script" {
+				isScript = true
 				for _, attr := range node.Attr {
+					// <script src="...">
 					if attr.Key == "src" {
-						ref, err := ctx.Url.Parse(attr.Val)
-						if err != nil {
-							error(ctx.Depth, "Failed to parse JavaScript url:", err)
-							return
-						}
-
-						jsCtx := ctx
-						jsCtx.Url = *ctx.Url.ResolveReference(ref)
-						jsCtx.Depth++
-
-						js, ok := fetch(jsCtx)
-						if !ok {
-							return
-						}
-
-						fromJs(jsCtx, js)
+						script = attr.Val
+						break
 					}
 				}
 			}
 
 			// css source maps
 			if node.Data == "link" {
-				isStyle := false
-				href := ""
 				for _, attr := range node.Attr {
+					// <link rel="stylesheet">
 					if attr.Key == "rel" && attr.Val == "stylesheet" {
 						isStyle = true
+						break
 					}
 
+					// <link as="style">
 					if attr.Key == "as" && attr.Val == "style" {
 						isStyle = true
+						break
 					}
 
-					if attr.Key == "href" {
-						href = attr.Val
+					// <link as="script">
+					if attr.Key == "as" && attr.Val == "script" {
+						isScript = true
+						break
 					}
-				}
-
-				if !isStyle || href == "" {
-					return
 				}
 
 				for _, attr := range node.Attr {
+					// <link href="...">
 					if attr.Key == "href" {
-						ref, err := url.Parse(attr.Val)
-						if err != nil {
-							error(ctx.Depth, "Failed to parse CSS url:", err)
-							return
-						}
-
-						cssCtx := ctx
-						cssCtx.Url = *ctx.Url.ResolveReference(ref)
-						cssCtx.Depth++
-
-						css, ok := fetch(cssCtx)
-						if !ok {
-							return
-						}
-
-						fromCss(cssCtx, css)
+						style = attr.Val
+						script = attr.Val
+						break
 					}
+				}
+			}
+		}
+
+		if isScript && script != "" {
+			ref, err := ctx.Url.Parse(script)
+			if err != nil {
+				error(ctx.Depth, "Failed to parse JavaScript url:", err)
+			} else {
+				jsCtx := ctx
+				jsCtx.Url = *ctx.Url.ResolveReference(ref)
+				jsCtx.Depth++
+
+				js, ok := fetch(jsCtx)
+				if ok {
+					fromJs(jsCtx, js)
+				}
+			}
+		}
+
+		if isStyle && style != "" {
+			ref, err := url.Parse(style)
+			if err != nil {
+				error(ctx.Depth, "Failed to parse CSS url:", err)
+			} else {
+				cssCtx := ctx
+				cssCtx.Url = *ctx.Url.ResolveReference(ref)
+				cssCtx.Depth++
+
+				css, ok := fetch(cssCtx)
+				if ok {
+					fromCss(cssCtx, css)
 				}
 			}
 		}
