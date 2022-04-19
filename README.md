@@ -1,3 +1,5 @@
+![sourcerer](https://user-images.githubusercontent.com/68407783/163922237-d4344eea-a856-4e85-acd4-3af37d2304b9.svg)
+
 sourcerer is a cli tool to get a website's source code from its source maps written in go
 
 # usage
