@@ -3,8 +3,6 @@ name: Release
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
 
 jobs:
   build:
@@ -18,11 +16,11 @@ jobs:
           go-version: 1.17
 
       - name: Build
-        uses: izumin5210/action-go-crossbuild@v1.0.0
-        with:
-          name: "sourcerer"
-          
+        run: |
+          chmod +x ./build.bash
+          ./build.bash
+
       - name: Create release
         uses: elgohr/Github-Release-Action@v4
         with:
-          title: "gaming"
+          title: "${{ github.sha }}"
