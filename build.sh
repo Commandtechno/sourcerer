@@ -16,6 +16,7 @@ contains() {
 CURRENT_DIRECTORY="${PWD##*/}"
 OUTPUT_DIR="build" # . for current directory
 OUTPUT="${OUTPUT_DIR}/${CURRENT_DIRECTORY}" # if no src file given, use current dir name
+FAILURES=""
 
 # You can set your own flags on the command line
 FLAGS=${FLAGS:-"-ldflags=\"-s -w\""}
@@ -23,10 +24,6 @@ FLAGS=${FLAGS:-"-ldflags=\"-s -w\""}
 # A list of OSes to not build for, space-separated
 # It can be set from the command line when the script is called.
 NOT_ALLOWED_OS=${NOT_ALLOWED_OS:-"js android ios solaris illumos aix"}
-
-
-# download dependencies
-go get
 
 # Get all targets
 while IFS= read -r target; do
@@ -60,15 +57,19 @@ while IFS= read -r target; do
             if [[ "${GOOS}" == "windows" ]]; then BIN_FILENAME="${BIN_FILENAME}.exe"; fi
             CMD="GOARM=${GOARM} GOOS=${GOOS} GOARCH=${GOARCH} go build $FLAGS -o ${BIN_FILENAME} $@"
             echo "${CMD}"
-            eval "${CMD} &"
+            eval "${CMD}" || FAILURES="${FAILURES} ${GOOS}/${GOARCH}${GOARM}" 
         done
     else
         # Build non-arm here
         if [[ "${GOOS}" == "windows" ]]; then BIN_FILENAME="${BIN_FILENAME}.exe"; fi
         CMD="GOOS=${GOOS} GOARCH=${GOARCH} go build $FLAGS -o ${BIN_FILENAME} $@"
         echo "${CMD}"
-        eval "${CMD} &"
+        eval "${CMD}" || FAILURES="${FAILURES} ${GOOS}/${GOARCH}"
     fi
 done <<< "$(go tool dist list)"
 
-wait
+if [[ "${FAILURES}" != "" ]]; then
+    echo ""
+    echo "${SCRIPT_NAME} failed on: ${FAILURES}"
+    exit 1
+fi
