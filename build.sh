@@ -24,6 +24,10 @@ FLAGS=${FLAGS:-"-ldflags=\"-s -w\""}
 # It can be set from the command line when the script is called.
 NOT_ALLOWED_OS=${NOT_ALLOWED_OS:-"js android ios solaris illumos aix"}
 
+
+# download dependencies
+go get
+
 # Get all targets
 while IFS= read -r target; do
     GOOS=${target%/*}
