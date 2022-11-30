@@ -16,7 +16,6 @@ contains() {
 CURRENT_DIRECTORY="${PWD##*/}"
 OUTPUT_DIR="build" # . for current directory
 OUTPUT="${OUTPUT_DIR}/${CURRENT_DIRECTORY}" # if no src file given, use current dir name
-FAILURES=""
 
 # You can set your own flags on the command line
 FLAGS=${FLAGS:-"-ldflags=\"-s -w\""}
@@ -57,19 +56,15 @@ while IFS= read -r target; do
             if [[ "${GOOS}" == "windows" ]]; then BIN_FILENAME="${BIN_FILENAME}.exe"; fi
             CMD="GOARM=${GOARM} GOOS=${GOOS} GOARCH=${GOARCH} go build $FLAGS -o ${BIN_FILENAME} $@"
             echo "${CMD}"
-            eval "${CMD}" || FAILURES="${FAILURES} ${GOOS}/${GOARCH}${GOARM}" 
+            eval "${CMD} &"
         done
     else
         # Build non-arm here
         if [[ "${GOOS}" == "windows" ]]; then BIN_FILENAME="${BIN_FILENAME}.exe"; fi
         CMD="GOOS=${GOOS} GOARCH=${GOARCH} go build $FLAGS -o ${BIN_FILENAME} $@"
         echo "${CMD}"
-        eval "${CMD}" || FAILURES="${FAILURES} ${GOOS}/${GOARCH}"
+        eval "${CMD} &"
     fi
 done <<< "$(go tool dist list)"
 
-if [[ "${FAILURES}" != "" ]]; then
-    echo ""
-    echo "${SCRIPT_NAME} failed on: ${FAILURES}"
-    exit 1
-fi
+wait
