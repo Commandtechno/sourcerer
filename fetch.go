@@ -1,10 +1,39 @@
 package main
 
 import (
+	"encoding/base64"
+	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 func fetch(ctx Context) (*http.Response, bool) {
+	if ctx.Url.Scheme == "data" {
+		header, data, found := strings.Cut(ctx.Url.Opaque, ",")
+		if !found {
+			return nil, false
+		}
+
+		if !strings.HasPrefix(header, "application/json") {
+			return nil, false
+		}
+
+		if strings.Contains(header, ";base64") {
+			decoded, err := base64.StdEncoding.DecodeString(data)
+			if err != nil {
+				return nil, false
+			}
+
+			data = string(decoded)
+		}
+
+		return &http.Response{
+			StatusCode: 200,
+			Status:     "OK",
+			Body:       ioutil.NopCloser(strings.NewReader(data)),
+		}, true
+	}
+
 	if _, cached := ctx.Cache[ctx.Url.String()]; cached {
 		return nil, false
 	} else {
