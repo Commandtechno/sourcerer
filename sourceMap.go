@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/flytam/filenamify"
 )
 
 type SourceMap struct {
@@ -37,13 +39,20 @@ func fromSourceMap(ctx Context, res *http.Response) {
 			source = source[:queryIndex]
 		}
 
+		hashIndex := strings.Index(source, "?")
+		if hashIndex != -1 {
+			source = source[:hashIndex]
+		}
+
 		// remove reserved characters
-		// https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
-		source = strings.ReplaceAll(source, "<", "")
-		source = strings.ReplaceAll(source, ">", "")
-		source = strings.ReplaceAll(source, ":", "")
-		source = strings.ReplaceAll(source, "\"", "")
-		source = strings.ReplaceAll(source, "<", "")
+		source, err := filenamify.FilenamifyV2(source, func(options *filenamify.Options) {
+			options.Replacement = "_"
+		})
+
+		if err != nil {
+			error(ctx.Depth, "Failed to filenamify source:", err)
+			continue
+		}
 
 		path := filepath.Join(filepath.Clean(ctx.Dir), source)
 		dir := filepath.Dir(path)
