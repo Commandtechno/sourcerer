@@ -12,7 +12,7 @@ func fromUrl(ctx Context) {
 
 	contentType := res.Header.Get("Content-Type")
 	if contentType == "" {
-		warn(ctx.Depth, "URL responded with no content type:", contentType)
+		Warn(ctx.Depth, "URL responded with no content type:", contentType)
 		return
 	}
 
@@ -36,6 +36,6 @@ func fromUrl(ctx Context) {
 		fromSourceMap(ctx, res)
 
 	default:
-		error(ctx.Depth, "URL responded with unknown content type:", contentType)
+		Error(ctx.Depth, "URL responded with unknown content type:", contentType)
 	}
 }

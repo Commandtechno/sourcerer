@@ -8,13 +8,13 @@ import (
 )
 
 func fromCss(ctx Context, res *http.Response) {
-	info(ctx.Depth, "Processing CSS...")
+	Info(ctx.Depth, "Processing CSS...")
 
 	var sourceMapUrl url.URL
 
 	str, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		error(ctx.Depth, "Failed to read css response body:", err)
+		Error(ctx.Depth, "Failed to read css response body:", err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func fromCss(ctx Context, res *http.Response) {
 
 		ref, err := url.Parse(after)
 		if err != nil {
-			error(ctx.Depth, "Failed to parse CSS source map url:", err)
+			Error(ctx.Depth, "Failed to parse CSS source map url:", err)
 			return
 		}
 

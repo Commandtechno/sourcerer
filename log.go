@@ -11,7 +11,7 @@ func getIndent(depth int) string {
 	return strings.Repeat("    ", depth)
 }
 
-func info(depth int, args ...interface{}) {
+func Info(depth int, args ...interface{}) {
 	fmt.Print(getIndent(depth))
 	fmt.Print(chalk.BlueLight().Bold())
 	fmt.Print("[INFO]")
@@ -20,7 +20,7 @@ func info(depth int, args ...interface{}) {
 	fmt.Println(args...)
 }
 
-func warn(depth int, args ...interface{}) {
+func Warn(depth int, args ...interface{}) {
 	fmt.Print(getIndent(depth))
 	fmt.Print(chalk.YellowLight().Bold())
 	fmt.Print("[WARN]")
@@ -29,7 +29,7 @@ func warn(depth int, args ...interface{}) {
 	fmt.Println(args...)
 }
 
-func success(depth int, args ...interface{}) {
+func Success(depth int, args ...interface{}) {
 	fmt.Print(getIndent(depth))
 	fmt.Print(chalk.GreenLight().Bold())
 	fmt.Print("[SUCCESS]")
@@ -38,7 +38,7 @@ func success(depth int, args ...interface{}) {
 	fmt.Println(args...)
 }
 
-func error(depth int, args ...interface{}) {
+func Error(depth int, args ...interface{}) {
 	fmt.Print(getIndent(depth))
 	fmt.Print(chalk.RedLight().Bold())
 	fmt.Print("[ERROR]")

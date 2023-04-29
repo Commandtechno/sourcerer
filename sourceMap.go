@@ -15,16 +15,34 @@ type SourceMap struct {
 	SourcesContent []string `json:"sourcesContent"`
 }
 
+func filenamifyOpts(options *filenamify.Options) {
+	options.Replacement = "_"
+}
+
+func pathify(path string) (string, error) {
+	var result string
+	for _, part := range strings.Split(filepath.Clean(path), string(os.PathSeparator)) {
+		filename, err := filenamify.FilenamifyV2(part, filenamifyOpts)
+		if err != nil {
+			return "", err
+		}
+
+		result = filepath.Join(result, filename)
+	}
+
+	return result, nil
+}
+
 func fromSourceMap(ctx Context, res *http.Response) {
-	info(ctx.Depth, "Processing source map...")
+	Info(ctx.Depth, "Processing source map...")
 
 	var sourceMap SourceMap
 	if err := json.NewDecoder(res.Body).Decode(&sourceMap); err != nil {
-		error(ctx.Depth, "Failed to parse source map:", err)
+		Error(ctx.Depth, "Failed to parse source map:", err)
 		return
 	}
 
-	info(ctx.Depth, "Unpacking", len(sourceMap.Sources), "sources...")
+	Info(ctx.Depth, "Unpacking", len(sourceMap.Sources), "sources...")
 	ctx.Depth++
 
 	for index, source := range sourceMap.Sources {
@@ -45,26 +63,22 @@ func fromSourceMap(ctx Context, res *http.Response) {
 		}
 
 		// remove reserved characters
-		source, err := filenamify.FilenamifyV2(source, func(options *filenamify.Options) {
-			options.Replacement = "_"
-		})
-
+		relPath, err := pathify(source)
 		if err != nil {
-			error(ctx.Depth, "Failed to filenamify source:", err)
+			Error(ctx.Depth, "Failed to normalize pathname:", err)
 			continue
 		}
 
-		path := filepath.Join(filepath.Clean(ctx.Dir), source)
+		path := filepath.Join(ctx.Dir, relPath)
 		dir := filepath.Dir(path)
-
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			error(ctx.Depth, "Failed to create source directory:", err)
+			Error(ctx.Depth, "Failed to create source directory:", err)
 			continue
 		}
 
 		content := sourceMap.SourcesContent[index]
 		if err := os.WriteFile(path, []byte(content), os.ModePerm); err != nil {
-			error(ctx.Depth, "Failed to write source file:", err)
+			Error(ctx.Depth, "Failed to write source file:", err)
 			continue
 		}
 	}

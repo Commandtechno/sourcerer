@@ -24,7 +24,7 @@ func main() {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		error(0, "Failed to get current path", err)
+		Error(0, "Failed to get current path", err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func main() {
 	dir := filepath.Join(cwd, name)
 
 	if err := os.Mkdir(dir, os.ModePerm); err != nil {
-		error(0, "Failed to create output directory", err)
+		Error(0, "Failed to create output directory", err)
 		return
 	}
 

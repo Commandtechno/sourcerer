@@ -5,7 +5,7 @@ sourcerer is a cli tool to get a website's source code from its source maps writ
 # usage
 
 ```
-sourcerer [name] ...[urls]
+sourcerer [dir] [...urls]
 ```
 
 the url can either be html, css, javascript, or a source map json

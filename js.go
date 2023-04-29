@@ -8,13 +8,13 @@ import (
 )
 
 func fromJs(ctx Context, res *http.Response) {
-	info(ctx.Depth, "Processing JavaScript...")
+	Info(ctx.Depth, "Processing JavaScript...")
 
 	var sourceMapUrl url.URL
 
 	str, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		error(ctx.Depth, "Failed to read body:", err)
+		Error(ctx.Depth, "Failed to read body:", err)
 		return
 	}
 
@@ -27,7 +27,7 @@ func fromJs(ctx Context, res *http.Response) {
 		after := string(str[startIndex+len("//# sourceMappingURL="):])
 		ref, err := url.Parse(after)
 		if err != nil {
-			error(ctx.Depth, "Failed to parse JavaScript source map url:", err)
+			Error(ctx.Depth, "Failed to parse JavaScript source map url:", err)
 			return
 		}
 

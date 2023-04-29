@@ -8,11 +8,11 @@ import (
 )
 
 func fromHtml(ctx Context, res *http.Response) {
-	info(ctx.Depth, "Processing HTML...")
+	Info(ctx.Depth, "Processing HTML...")
 
 	parsedHtml, err := html.Parse(res.Body)
 	if err != nil {
-		error(ctx.Depth, "Failed to parse HTML:", err)
+		Error(ctx.Depth, "Failed to parse HTML:", err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func fromHtml(ctx Context, res *http.Response) {
 		if isScript && script != "" {
 			ref, err := ctx.Url.Parse(script)
 			if err != nil {
-				error(ctx.Depth, "Failed to parse JavaScript url:", err)
+				Error(ctx.Depth, "Failed to parse JavaScript url:", err)
 			} else {
 				jsCtx := ctx
 				jsCtx.Url = *ctx.Url.ResolveReference(ref)
@@ -89,7 +89,7 @@ func fromHtml(ctx Context, res *http.Response) {
 		if isStyle && style != "" {
 			ref, err := url.Parse(style)
 			if err != nil {
-				error(ctx.Depth, "Failed to parse CSS url:", err)
+				Error(ctx.Depth, "Failed to parse CSS url:", err)
 			} else {
 				cssCtx := ctx
 				cssCtx.Url = *ctx.Url.ResolveReference(ref)
