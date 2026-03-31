@@ -1,18 +1,19 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 func fromJs(ctx Context, res *http.Response) {
+	defer res.Body.Close()
 	Info(ctx.Depth, "Processing JavaScript...")
 
 	var sourceMapUrl url.URL
 
-	str, err := ioutil.ReadAll(res.Body)
+	str, err := io.ReadAll(res.Body)
 	if err != nil {
 		Error(ctx.Depth, "Failed to read body:", err)
 		return

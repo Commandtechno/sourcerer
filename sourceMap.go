@@ -34,6 +34,7 @@ func pathify(path string) (string, error) {
 }
 
 func fromSourceMap(ctx Context, res *http.Response) {
+	defer res.Body.Close()
 	Info(ctx.Depth, "Processing source map...")
 
 	var sourceMap SourceMap

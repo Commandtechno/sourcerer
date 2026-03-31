@@ -8,6 +8,7 @@ import (
 )
 
 func fromHtml(ctx Context, res *http.Response) {
+	defer res.Body.Close()
 	Info(ctx.Depth, "Processing HTML...")
 
 	parsedHtml, err := html.Parse(res.Body)
