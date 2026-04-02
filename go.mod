@@ -1,4 +1,4 @@
-module sourcerer
+module github.com/Commandtechno/sourcerer
 
 go 1.17
 
